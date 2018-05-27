@@ -15,14 +15,14 @@ class Store {
         var reducer = _.get(this.reducers, action.type)
         
         if(typeof reducer === 'function') {
-            this.state = reducer(_.clone(this.state), action, this.dispatch)
+            this.state = reducer(this.state, action, this.dispatch)
             this.subscribers.forEach( fn => fn(this.state) )
         }
 
     }
 
     getState () {
-        return this.state
+        return _.clone(this.state)
     }
 
     subscribe (fn) {
