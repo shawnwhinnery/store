@@ -15,7 +15,7 @@ class Store {
         var reducer = _.get(this.reducers, action.type)
         
         if(typeof reducer === 'function') {
-            this.state = reducer(this.state, action, this.dispatch)
+            this.state = reducer(this.getState(), action, this.dispatch)
             this.subscribers.forEach( fn => fn(this.state) )
         }
 
