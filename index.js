@@ -6,15 +6,20 @@ class Store {
         this.state = _.clone(initialState)
         this.reducers = reducers
         this.subscribers = new Set([])
-        this.dispatch = (action) => {
+        this.dispatch = (action, silent) => {
 
-            if (Array.isArray(action)) return action.forEach(this.dispatch)
+            if (Array.isArray(action)) {
+                action.forEach((action) => {
+                    this.dispatch(action, true)
+                })
+                this.subscribers.forEach(fn => fn(this.state))
+            }
 
             var reducer = _.get(this.reducers, action.type)
 
             if (typeof reducer === 'function') {
                 this.state = reducer(this.getState(), action, this.dispatch)
-                this.subscribers.forEach(fn => fn(this.state))
+                if (!silent) this.subscribers.forEach(fn => fn(this.state))
             }
 
         }
