@@ -10,7 +10,6 @@ const REDUCERS = {
         return state
     },
     NEXT: (state, action, next) => {
-        state.a.v = 3
         setTimeout(() => {
             next([{
                     type: 'INCREMENT'
