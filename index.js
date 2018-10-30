@@ -22,25 +22,36 @@ class Store {
          * @method dispatch
          * @param {Object} action 
          * @param {Boolean} silent 
+         * @param {Boolean} clone
          */
         this.dispatch = (action, silent, clone = true) => {
 
             if (Array.isArray(action)) {
-                action.forEach((_action, i) => {
-                    let _silent = silent || (i < (action.length - 1))
-                    this.dispatch(_action, _silent)
+
+                action.forEach((_action, i) => {    
+                    let isLastAction = (i < (action.length - 1)),
+                        _silent = silent || isLastAction,
+                        shouldClone = isLastAction ? clone : false
+                    this.dispatch(_action, _silent, shouldClone)
                 })
+
                 return this.subscribers.forEach(fn => fn(this.state))
             }
 
             var reducer = _.get(this.reducers, action.type),
-                enableLogging = this.enableLogging
+                enableLogging = this.enableLogging,
+                groupLogging = (typeof console.groupCollapsed === 'function')
 
             if (typeof reducer === 'function') {
 
                 if (enableLogging) {
-                    console.log('action type:', action.type)
-                    console.log('action:', JSON.stringify(action))
+                    if (groupLogging) {
+                        console.groupCollapsed(action.type)
+                        console.log(action)
+                    } else {
+                        console.log('action type:', action.type)
+                        console.log('action:', JSON.stringify(action))
+                    }
                 }
 
                 try {
@@ -54,13 +65,13 @@ class Store {
                     }
                 }
 
+                if (groupLogging && enableLogging) console.groupEnd()
+
                 if (!silent) {
                     this.subscribers.forEach((fn) => {
                         fn(this.state)
                     })
                 }
-
-                if (enableLogging) console.log()
 
             } else {
                 if (enableLogging) {
@@ -70,13 +81,15 @@ class Store {
                 }
             }
 
-
         }
 
     }
 
     /**
-     * Get the current state of the store. Optionally returns a clone of the current state.
+     * Get the current state of the store. 
+     * Becaue the cloneDeep method uses a non-trivial amount of computation I've made it optional.
+     * this is useful when dispatching an array of actions and gives the application the opportunity
+     * to prevent unnecessary calls to any subscribed change handlers.
      * @method getState
      * @param {Boolean} copy 
      */
